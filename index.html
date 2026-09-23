@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>💰 Financeiro — Motorista de App</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+html, body {
+  margin:0;
+  background:linear-gradient(180deg,#eff6ff 0%,#f8fafc 28%,#f1f5f9 100%);
+  font-family:system-ui,-apple-system,sans-serif;
+  color:#0f172a;
+}
+body {
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+:root {
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+html { scroll-padding-top:env(safe-area-inset-top,0px); }
+* { box-sizing:border-box; }
+
+.card {
+  background:rgba(255,255,255,0.9);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border:1px solid rgba(148,163,184,0.15);
+  box-shadow:0 10px 25px rgba(15,23,42,0.06);
+}
+.tab-bar {
+  border:1px solid rgba(148,163,184,0.18);
+  box-shadow:0 8px 20px rgba(15,23,42,0.04);
+}
+.inp:focus {
+  box-shadow:0 0 0 3px rgba(59,130,246,0.13);
+  transform:translateY(-1px);
+}
+input, select {
+  background:white;
+  transition:all 0.2s ease;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { color-scheme:dark; }
+  html,body { background:linear-gradient(180deg,#020817 0%,#0f172a 30%,#111827 100%); }
+  .card { background:rgba(15,23,42,0.9)!important; border-color:rgba(148,163,184,0.14)!important; box-shadow:0 10px 30px rgba(2,6,23,0.45)!important; }
+  .txt-main { color:#f1f5f9!important; }
+  .txt-muted { color:#94a3b8!important; }
+  .bg-row { background:#1e293b!important; border-color:#334155!important; }
+  .inp { background:#334155!important; color:#f1f5f9!important; border-color:#475569!important; }
+  .bg-gray-50,.bg-gray-100 { background:#1e293b!important; }
+  .border-gray-100,.border-gray-200 { border-color:#334155!important; }
+  .text-gray-700,.text-gray-800 { color:#e2e8f0!important; }
+  .text-gray-500,.text-gray-600,.text-gray-400 { color:#94a3b8!important; }
+  .tab-bar { background:#0f172a!important; border-color:rgba(148,163,184,0.15)!important; }
+}
+
+:root[data-theme="dark"] { color-scheme:dark; }
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) input,
+  :root:not([data-theme="light"]) select {
+    background:#334155;
+    color:#f1f5f9;
+    border-color:#475569;
+  }
+}
+
+@media (max-width: 420px) {
+  .grid.grid-cols-3 { gap: 0.5rem; }
+  .card { border-radius: 0.9rem; }
+  .tab-bar button {
+    font-size: 0.62rem;
+    letter-spacing: 0.01em;
+    padding-top: 0.8rem;
+    padding-bottom: 0.8rem;
+  }
+  .px-3 { padding-left: 0.65rem!important; padding-right: 0.65rem!important; }
+  .p-4 { padding: 0.9rem!important; }
+}
+
+@media (max-width: 360px) {
+  h1 { font-size: 1rem; }
+  .text-xs { font-size: 0.68rem; }
+  .text-sm { font-size: 0.72rem; }
+  .text-lg { font-size: 1rem; }
+}
+</style>
+
+<div class="pb-16">
+
+  <!-- Header -->
+  <header class="px-4 pt-5 pb-5 shadow-sm" style="background:linear-gradient(135deg,#0f172a 0%,#1d4ed8 55%,#2563eb 100%); padding-top:calc(env(safe-area-inset-top,0px) + 1.2rem);">
+    <div class="flex items-center justify-center">
+      <div class="text-center">
+        <h1 class="text-white text-lg font-black tracking-wide">Financeiro Driver</h1>
+        <p class="text-blue-100 text-[11px] uppercase tracking-[0.22em] mt-1">Uber & 99 · controle mensal</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- Summary Cards -->
+  <div class="p-3">
+    <div class="card rounded-2xl p-3">
+      <div class="flex items-center justify-between mb-3">
+        <div>
+          <p class="text-[10px] uppercase tracking-[0.2em] text-blue-500 font-bold">Resumo</p>
+          <h2 class="text-sm font-bold txt-main text-gray-800">Painel do mês</h2>
+        </div>
+        <span id="statusBadge" class="rounded-full px-2 py-1 text-[10px] font-bold border border-emerald-200 bg-emerald-50 text-emerald-700">Em dia</span>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2">
+        <div class="rounded-xl p-3 border border-red-100 bg-red-50">
+          <div class="text-[10px] uppercase tracking-wide text-red-500 font-semibold">Custo total</div>
+          <div id="hCusto" class="text-base font-extrabold text-red-600 mt-1">R$ 0</div>
+        </div>
+        <div class="rounded-xl p-3 border border-blue-100 bg-blue-50">
+          <div class="text-[10px] uppercase tracking-wide text-blue-500 font-semibold">Meta bruta</div>
+          <div id="hMeta" class="text-base font-extrabold text-blue-700 mt-1">R$ 0</div>
+        </div>
+        <div class="rounded-xl p-3 border border-emerald-100 bg-emerald-50">
+          <div class="text-[10px] uppercase tracking-wide text-emerald-600 font-semibold">Ganhos</div>
+          <div id="hGanho" class="text-base font-extrabold text-emerald-700 mt-1">R$ 0</div>
+        </div>
+        <div class="rounded-xl p-3 border border-violet-100 bg-violet-50">
+          <div class="text-[10px] uppercase tracking-wide text-violet-600 font-semibold">Líquido</div>
+          <div id="hLiquido" class="text-base font-extrabold text-violet-700 mt-1">R$ 0</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Progress -->
+  <div class="px-3 mb-3">
+    <div class="card rounded-2xl p-3 shadow-sm">
+      <div class="flex justify-between items-center text-xs mb-2">
+        <span class="txt-muted text-gray-500 font-medium">Progresso da meta</span>
+        <span id="pPct" class="font-bold text-blue-600">0%</span>
+      </div>
+      <div class="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
+        <div id="pBar" class="h-3 rounded-full transition-all duration-500" style="width:0%;background:#1d4ed8"></div>
+      </div>
+      <div id="pMsg" class="text-xs text-gray-400 mt-1.5 text-center"></div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="px-3 mb-3">
+    <div class="tab-bar bg-white rounded-xl shadow-sm flex overflow-hidden">
+      <button onclick="tab('custos')" id="t-custos" class="flex-1 py-3 text-xs font-bold" style="color:#1d4ed8;border-bottom:2px solid #1d4ed8">💰 Custos</button>
+      <button onclick="tab('meta')" id="t-meta" class="flex-1 py-3 text-xs font-medium text-gray-400">🎯 Meta</button>
+      <button onclick="tab('ganhos')" id="t-ganhos" class="flex-1 py-3 text-xs font-medium text-gray-400">📊 Ganhos</button>
+    </div>
+  </div>
+
+  <div class="px-3">
+
+    <!-- === CUSTOS === -->
+    <div id="p-custos">
+      <div class="card bg-white rounded-xl shadow-sm p-4 space-y-4 mb-3">
+        <p class="text-xs font-bold text-gray-500 uppercase tracking-wide">Custos Mensais</p>
+
+        <div>
+          <label class="txt-muted text-xs text-gray-400">📅 Parcela do Carro <span class="text-red-400 font-semibold">(vence dia 16)</span></label>
+          <div class="relative mt-1">
+            <span class="absolute left-3 top-2.5 txt-muted text-gray-400 text-xs">R$</span>
+            <input id="iParcela" type="number" value="2998" oninput="calc()"
+              class="inp w-full border border-gray-100 rounded-lg pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:border-blue-400">
+          </div>
+        </div>
+
+        <div>
+          <label class="txt-muted text-xs text-gray-400">🛡️ Seguro (mensal)</label>
+          <div class="relative mt-1">
+            <span class="absolute left-3 top-2.5 txt-muted text-gray-400 text-xs">R$</span>
+            <input id="iSeguro" type="number" value="300" oninput="calc()"
+              class="inp w-full border border-gray-100 rounded-lg pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:border-blue-400">
+          </div>
+        </div>
+
+        <div>
+          <label class="txt-muted text-xs text-gray-400">⛽ Combustível estimado/mês</label>
+          <div class="relative mt-1">
+            <span class="absolute left-3 top-2.5 txt-muted text-gray-400 text-xs">R$</span>
+            <input id="iComb" type="number" value="0" placeholder="0" oninput="calc()"
+              class="inp w-full border border-gray-100 rounded-lg pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:border-blue-400">
+          </div>
+          <p class="text-xs text-orange-400 mt-1">💡 Some os abastecimentos semanalmente e atualize aqui</p>
+        </div>
+
+        <div>
+          <label class="txt-muted text-xs text-gray-400">🔧 Outros (manutenção, lavagem, app MEI...)</label>
+          <div class="relative mt-1">
+            <span class="absolute left-3 top-2.5 txt-muted text-gray-400 text-xs">R$</span>
+            <input id="iOutros" type="number" value="0" placeholder="0" oninput="calc()"
+              class="inp w-full border border-gray-100 rounded-lg pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:border-blue-400">
+          </div>
+        </div>
+
+        <div class="bg-red-50 rounded-xl p-3 flex justify-between items-center">
+          <span class="text-sm text-red-700 font-semibold">Total de Custos</span>
+          <span id="rCusto" class="text-lg font-bold text-red-600">R$ 3.298,00</span>
+        </div>
+      </div>
+
+      <div class="card bg-white rounded-xl shadow-sm p-4 mb-3">
+        <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Configurações do Cálculo</p>
+        <div class="space-y-3">
+          <div>
+            <label class="txt-muted text-xs text-gray-400">📅 Dias trabalhados por mês</label>
+            <input id="iDias" type="number" value="22" min="1" max="31" oninput="calc()"
+              class="inp w-full border border-gray-100 rounded-lg px-3 py-2.5 text-sm mt-1 focus:outline-none focus:border-blue-400">
+          </div>
+          <div>
+            <label class="txt-muted text-xs text-gray-400">% Taxa média Uber / 99</label>
+            <input id="iTaxa" type="number" value="25" min="1" max="50" oninput="calc()"
+              class="inp w-full border border-gray-100 rounded-lg px-3 py-2.5 text-sm mt-1 focus:outline-none focus:border-blue-400">
+            <p class="text-xs text-gray-400 mt-1">Uber cobra ~27%, 99 cobra ~20%. Use 25% como média.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- === META === -->
+    <div id="p-meta" class="hidden">
+      <div class="card bg-white rounded-xl shadow-sm p-4 mb-3">
+        <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Sua Meta do Mês</p>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-red-50 rounded-xl p-3">
+            <p class="text-xs text-red-400">Custo Total</p>
+            <p id="mCusto" class="text-base font-bold text-red-600 mt-0.5">R$ 0</p>
+          </div>
+          <div class="bg-blue-50 rounded-xl p-3">
+            <p class="text-xs text-blue-400">Faturar Bruto</p>
+            <p id="mBruto" class="text-base font-bold text-blue-600 mt-0.5">R$ 0</p>
+            <p class="text-xs text-blue-300 mt-0.5">Uber/99</p>
+          </div>
+          <div class="bg-green-50 rounded-xl p-3">
+            <p class="text-xs text-green-400">Meta por Dia</p>
+            <p id="mDia" class="text-base font-bold text-green-600 mt-0.5">R$ 0</p>
+          </div>
+          <div class="bg-purple-50 rounded-xl p-3">
+            <p class="text-xs text-purple-400">Corridas/Dia*</p>
+            <p id="mCorridas" class="text-base font-bold text-purple-600 mt-0.5">0</p>
+          </div>
+        </div>
+        <div class="mt-4">
+          <label class="txt-muted text-xs text-gray-400">🚗 Valor médio por corrida (R$)</label>
+          <div class="relative mt-1">
+            <span class="absolute left-3 top-2.5 txt-muted text-gray-400 text-xs">R$</span>
+            <input id="iCorrida" type="number" value="22" oninput="calc()"
+              class="inp w-full border border-gray-100 rounded-lg pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:border-blue-400">
+          </div>
+          <p class="text-xs text-gray-400 mt-1">* Estimativa de corridas necessárias por dia para atingir a meta</p>
+        </div>
+      </div>
+
+      <div class="card bg-white rounded-xl shadow-sm p-4 mb-3">
+        <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Composição dos Custos</p>
+        <div id="breakdown" class="space-y-2.5"></div>
+      </div>
+
+      <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-3">
+        <p class="text-xs font-bold text-amber-700">💡 Dica sobre o combustível</p>
+        <p class="text-xs text-amber-700 mt-1 leading-relaxed">Registre cada abastecimento na aba Ganhos. Ao fim da semana, some o total e atualize o campo Combustível na aba Custos. Assim a sua meta fica sempre precisa.</p>
+      </div>
+    </div>
+
+    <!-- === GANHOS === -->
+    <div id="p-ganhos" class="hidden">
+      <div class="card bg-white rounded-xl shadow-sm p-4 mb-3">
+        <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Registrar Dia Trabalhado</p>
+        <div class="space-y-3">
+          <div>
+            <label class="txt-muted text-xs text-gray-400">📅 Data</label>
+            <input id="gData" type="date" class="inp w-full border border-gray-100 rounded-lg px-3 py-2.5 text-sm mt-1 focus:outline-none focus:border-blue-400">
+          </div>
+          <div>
+            <label class="txt-muted text-xs text-gray-400">📱 Plataforma</label>
+            <select id="gPlat" class="inp w-full border border-gray-100 rounded-lg px-3 py-2.5 text-sm mt-1 focus:outline-none focus:border-blue-400">
+              <option>Uber</option>
+              <option>99</option>
+              <option>Uber + 99</option>
+              <option>Particular</option>
+            </select>
+          </div>
+          <div>
+            <label class="txt-muted text-xs text-gray-400">💰 Valor recebido no dia <span class="text-blue-400">(já descontada a taxa da plataforma)</span></label>
+            <div class="relative mt-1">
+              <span class="absolute left-3 top-2.5 txt-muted text-gray-400 text-xs">R$</span>
+              <input id="gValor" type="number" placeholder="0,00"
+                class="inp w-full border border-gray-100 rounded-lg pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:border-blue-400">
+            </div>
+          </div>
+          <div>
+            <label class="txt-muted text-xs text-gray-400">⛽ Combustível abastecido hoje (opcional)</label>
+            <div class="relative mt-1">
+              <span class="absolute left-3 top-2.5 txt-muted text-gray-400 text-xs">R$</span>
+              <input id="gComb" type="number" placeholder="0,00"
+                class="inp w-full border border-gray-100 rounded-lg pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:border-blue-400">
+            </div>
+          </div>
+          <button onclick="addGanho()" class="w-full py-3 rounded-xl text-white text-sm font-bold shadow-sm" style="background:#1d4ed8">
+            + Adicionar Registro
+          </button>
+        </div>
+      </div>
+
+      <div class="card bg-white rounded-xl shadow-sm p-4 mb-3">
+        <div class="flex justify-between items-center mb-3">
+          <p class="text-xs font-bold text-gray-500 uppercase tracking-wide">Histórico do Mês</p>
+          <button onclick="clearAll()" class="text-xs text-red-300">Zerar mês</button>
+        </div>
+        <div id="lista">
+          <p class="text-sm text-gray-300 text-center py-8">Nenhum registro ainda</p>
+        </div>
+        <div id="totais" class="hidden border-t border-gray-100 mt-3 pt-3 space-y-2">
+          <div class="flex justify-between text-sm">
+            <span class="txt-muted text-gray-500">Total recebido</span>
+            <span id="tRec" class="font-bold text-green-600">R$ 0</span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span class="txt-muted text-gray-500">Combustível gasto</span>
+            <span id="tComb" class="font-bold text-orange-500">R$ 0</span>
+          </div>
+          <div class="flex justify-between text-sm font-bold border-t border-gray-100 pt-2">
+            <span class="txt-main text-gray-700">Líquido real</span>
+            <span id="tLiq" class="text-blue-600">R$ 0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const B = v => 'R$\u00a0' + v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const $ = id => document.getElementById(id);
+let G = [];
+try { G = JSON.parse(localStorage.getItem('g_mot')||'[]'); } catch(e){}
+
+// Today's date
+const td = () => { const d=new Date(); return d.toISOString().slice(0,10); };
+$('gData').value = td();
+
+// Load saved config
+try {
+  const SC = JSON.parse(localStorage.getItem('c_mot')||'{}');
+  if(SC.p) $('iParcela').value=SC.p;
+  if(SC.s) $('iSeguro').value=SC.s;
+  if(SC.c) $('iComb').value=SC.c;
+  if(SC.o) $('iOutros').value=SC.o;
+  if(SC.d) $('iDias').value=SC.d;
+  if(SC.t) $('iTaxa').value=SC.t;
+  if(SC.cr) $('iCorrida').value=SC.cr;
+} catch(e){}
+
+function tab(name) {
+  ['custos','meta','ganhos'].forEach(n => {
+    $('p-'+n).classList.add('hidden');
+    $('t-'+n).style.color='#9ca3af';
+    $('t-'+n).style.borderBottom='none';
+    $('t-'+n).style.fontWeight='500';
+  });
+  $('p-'+name).classList.remove('hidden');
+  $('t-'+name).style.color='#1d4ed8';
+  $('t-'+name).style.borderBottom='2px solid #1d4ed8';
+  $('t-'+name).style.fontWeight='700';
+}
+
+function calc() {
+  const p=+$('iParcela').value||0, s=+$('iSeguro').value||0,
+        c=+$('iComb').value||0, o=+$('iOutros').value||0,
+        taxa=+$('iTaxa').value||25, dias=+$('iDias').value||22,
+        cr=+$('iCorrida').value||22;
+
+  const total=p+s+c+o;
+  const bruto=taxa<100 ? total/(1-taxa/100) : 0;
+  const dia=dias>0 ? bruto/dias : 0;
+  const corr=cr>0 ? Math.ceil(dia/cr) : 0;
+  const ganhoTotal=G.reduce((a,g)=>a+g.v,0);
+  const combustivelTotal=G.reduce((a,g)=>a+g.cb,0);
+  const liquidoReal=ganhoTotal-combustivelTotal;
+  const pct=total>0 ? Math.min(100,ganhoTotal/total*100) : 0;
+  const falta=Math.max(0,total-ganhoTotal);
+  const metaFalta=Math.max(0,bruto-ganhoTotal);
+  const melhorDia = G.length ? (ganhoTotal / G.length) : 0;
+  const diasAtivos = new Set(G.map(g => g.data)).size;
+  const mediaPorDia = diasAtivos > 0 ? ganhoTotal / diasAtivos : 0;
+
+  const status = ganhoTotal >= bruto ? 'Meta batida' : ganhoTotal >= total ? 'Acima dos custos' : 'Ajustando';
+  const statusColors = {
+    'Meta batida': 'border-emerald-200 bg-emerald-50 text-emerald-700',
+    'Acima dos custos': 'border-amber-200 bg-amber-50 text-amber-700',
+    'Ajustando': 'border-slate-200 bg-slate-50 text-slate-600'
+  };
+  $('statusBadge').textContent = status;
+  $('statusBadge').className = 'rounded-full px-2 py-1 text-[10px] font-bold ' + (statusColors[status] || statusColors['Ajustando']);
+
+  // Header
+  $('hCusto').textContent=B(total);
+  $('hMeta').textContent=B(bruto);
+  $('hGanho').textContent=B(ganhoTotal);
+  $('hLiquido').textContent=B(liquidoReal);
+
+  // Progress
+  $('pPct').textContent=pct.toFixed(0)+'%';
+  $('pBar').style.width=pct+'%';
+  $('pBar').style.background=pct>=100?'#22c55e':pct>=60?'#f59e0b':'#1d4ed8';
+  $('pMsg').textContent = pct>=100
+    ? '🎉 Meta atingida! Lucro líquido de '+B(liquidoReal-total)
+    : metaFalta>0 ? 'Faltam '+B(metaFalta)+' para atingir a meta bruta' : 'Você já superou a meta estimada.';
+
+  // Custos tab
+  $('rCusto').textContent=B(total);
+
+  // Meta tab
+  $('mCusto').textContent=B(total);
+  $('mBruto').textContent=B(bruto);
+  $('mDia').textContent=B(dia);
+  $('mCorridas').textContent=corr;
+
+  // Breakdown bars
+  const items=[
+    {l:'Parcela do Carro',v:p,cor:'#ef4444'},
+    {l:'Seguro',v:s,cor:'#f97316'},
+    {l:'Combustível',v:c,cor:'#eab308'},
+    {l:'Outros',v:o,cor:'#8b5cf6'}
+  ].filter(i=>i.v>0);
+  $('breakdown').innerHTML = total>0 ? items.map(i=>{
+    const pct=(i.v/total*100);
+    return `<div>
+      <div class="flex justify-between text-xs mb-0.5">
+        <span class="txt-muted text-gray-600">${i.l}</span>
+        <span class="font-semibold" style="color:${i.cor}">${B(i.v)} · ${pct.toFixed(0)}%</span>
+      </div>
+      <div class="w-full bg-gray-100 rounded-full h-1.5">
+        <div class="h-1.5 rounded-full" style="width:${pct}%;background:${i.cor}"></div>
+      </div>
+    </div>`;
+  }).join('') : '<p class="text-xs text-gray-400">Preencha os custos na aba Custos</p>';
+
+  // Extra insight summary
+  const avgDaily = dias>0 ? ganhoTotal/dias : 0;
+  const insight = ganhoTotal >= bruto
+    ? 'Você está acima da meta estimada. O mês está sólido e com espaço para ganhos extras.'
+    : ganhoTotal >= total
+      ? 'Seu faturamento já cobre os custos. Agora o foco é manter a consistência.'
+      : 'Ainda falta um esforço de volume para equilibrar custos e atingir a meta.';
+
+  const extra = `Média por dia: ${B(avgDaily)} • Dias ativos: ${diasAtivos || 0} • Melhor dia: ${B(melhorDia)}`;
+  $('pMsg').setAttribute('title', extra);
+  $('pMsg').dataset.insight = insight;
+
+  // Save config
+  try { localStorage.setItem('c_mot',JSON.stringify({p,s,c,o,d:dias,t:taxa,cr})); } catch(e){}
+}
+
+const icons={Uber:'🚗','99':'🟡','Uber + 99':'📱',Particular:'⭐'};
+
+function addGanho() {
+  const data=$('gData').value, plat=$('gPlat').value,
+        v=parseFloat($('gValor').value), cb=parseFloat($('gComb').value)||0;
+  if(!data||!v||v<=0){alert('Preencha a data e o valor recebido!');return;}
+  G.push({id:Date.now(),data,plat,v,cb});
+  try { localStorage.setItem('g_mot',JSON.stringify(G)); } catch(e){}
+  $('gValor').value=''; $('gComb').value='';
+  render(); calc();
+}
+
+function delG(id) {
+  G=G.filter(g=>g.id!==id);
+  try { localStorage.setItem('g_mot',JSON.stringify(G)); } catch(e){}
+  render(); calc();
+}
+
+function clearAll() {
+  if(confirm('Zerar todos os registros do mês e começar do zero?')){
+    G=[]; try{ localStorage.setItem('g_mot','[]'); }catch(e){}
+    render(); calc();
+  }
+}
+
+function render() {
+  const lista=$('lista'), totais=$('totais');
+  if(!G.length){
+    lista.innerHTML='<p class="text-sm text-gray-300 text-center py-8">Nenhum registro ainda</p>';
+    totais.classList.add('hidden'); return;
+  }
+  const sorted=[...G].sort((a,b)=>b.data.localeCompare(a.data));
+  lista.innerHTML=sorted.map(g=>{
+    const dt=new Date(g.data+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+    return `<div class="flex items-center justify-between py-2.5 border-b border-gray-50">
+      <div class="flex items-center gap-2">
+        <span class="text-lg">${icons[g.plat]||'🚗'}</span>
+        <div>
+          <p class="text-sm font-semibold txt-main text-gray-700">${dt} — ${g.plat}</p>
+          ${g.cb>0?`<p class="text-xs text-orange-400">⛽ Combustível: ${B(g.cb)}</p>`:''}
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="text-sm font-bold text-green-600">${B(g.v)}</span>
+        <button onclick="delG(${g.id})" class="text-xs text-red-300 hover:text-red-500">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  const tRec=G.reduce((a,g)=>a+g.v,0), tCb=G.reduce((a,g)=>a+g.cb,0);
+  $('tRec').textContent=B(tRec);
+  $('tComb').textContent=B(tCb);
+  $('tLiq').textContent=B(tRec-tCb);
+  totais.classList.remove('hidden');
+}
+
+calc(); render();
+</script>
